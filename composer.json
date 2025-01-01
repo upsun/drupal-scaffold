@@ -1,0 +1,25 @@
+{
+    "name": "upsun/drupal-scaffold",
+    "description": "Configuration additions to add Upsun hosting capabilities to an existing Drupal project",
+    "type": "library",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "Dan Morrison",
+            "email": "dman@coders.co.nz"
+        }
+    ],
+    "require": {
+        "drupal/core-composer-scaffold": "*"
+    },
+    "extra": {
+        "drupal-scaffold": {
+            "file-mapping": {
+                "[project-root]/.gitignore": {
+                    "path": "assets/common/.gitignore",
+                    "overwrite": false
+                }
+            }
+        }
+    }
+}
