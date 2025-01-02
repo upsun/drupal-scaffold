@@ -1,25 +1,42 @@
 {
-    "name": "upsun/drupal-scaffold",
-    "description": "Configuration additions to add Upsun hosting capabilities to an existing Drupal project",
-    "type": "library",
-    "license": "GPL-2.0-or-later",
-    "authors": [
-        {
-            "name": "Dan Morrison",
-            "email": "dman@coders.co.nz"
-        }
-    ],
-    "require": {
-        "drupal/core-composer-scaffold": "*"
-    },
-    "extra": {
-        "drupal-scaffold": {
-            "file-mapping": {
-                "[project-root]/.gitignore": {
-                    "path": "assets/common/.gitignore",
-                    "overwrite": false
-                }
-            }
-        }
+  "name": "upsun/drupal-scaffold",
+  "description": "Configuration additions to add Upsun hosting capabilities to an existing Drupal project",
+  "type": "library",
+  "license": "GPL-2.0-or-later",
+  "authors": [
+    {
+      "name": "Dan Morrison",
+      "email": "dman@coders.co.nz"
     }
+  ],
+  "require": {
+    "drupal/core-composer-scaffold": "*",
+    "platformsh/config-reader": "*"
+  },
+  "extra": {
+    "drupal-scaffold": {
+      "file-mapping": {
+        "[project-root]/.gitignore": {
+          "path": "assets/common/.gitignore",
+          "overwrite": false
+        },
+        "[project-root]/.upsun/config.yaml": {
+          "path": "assets/common/.upsun/config.yaml",
+          "overwrite": false
+        },
+        "[project-root]/drush/platformsh_deploy_drupal.sh": {
+          "path": "assets/common/drush/platformsh_deploy_drupal.sh",
+          "overwrite": false
+        },
+        "[web-root]/sites/default/settings.php": {
+          "append": "assets/common/sites/default/settings.php.append",
+          "overwrite": false
+        },
+        "[web-root]/sites/default/settings.platformsh.php": {
+          "path": "assets/common/sites/default/settings.platformsh.php",
+          "overwrite": false
+        }
+      }
+    }
+  }
 }
