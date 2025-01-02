@@ -35,7 +35,8 @@
         "[web-root]/sites/default/settings.php": {
           "append": "assets/common/web/sites/default/settings.php.append",
           "overwrite": false,
-          "force-append": true
+          "force-append": true,
+          "default": "assets/common/web/sites/default/default.settings.php"
         },
         "[web-root]/sites/default/settings.platformsh.php": {
           "path": "assets/common/web/sites/default/settings.platformsh.php",
@@ -43,10 +44,5 @@
         }
       }
     }
-  },
-  "scripts": {
-    "pre-drupal-scaffold-cmd": [
-      "printenv && cd web && if [ ! -f sites/default/settings.php ] ; then ; cp sites/default/default.settings.php sites/default/settings.php; fi"
-    ]
   }
 }
