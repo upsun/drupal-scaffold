@@ -10,19 +10,22 @@ location within the project.
 ## Usage
 
 Upsun-Drupal Composer Scaffold is used by requiring `upsun/drupal-scaffold` in your
-project, and providing configuration settings in the `extra` section of your
-project's composer.json file. 
+project, and adding it to the list of `drupal-scaffold.allowed-packages`
 
-Typically, the scaffold operations run automatically as needed, e.g. after
+Once installed, the scaffold operations run automatically as needed, e.g. after
 `composer install`.
 
-To scaffold a project directly, run:
+To add this feature to an existing Drupal project that was built in the `recommended-project` structure, 
+
 ```
-composer drupal:scaffold
+composer config repositories.upsun-drupal-scaffold vcs https://github.com/upsun/drupal-scaffold
+composer config --json --merge extra.drupal-scaffold.allowed-packages '["upsun/drupal-scaffold"]'
+composer require upsun/drupal-scaffold dev-main
 ```
+
 
 ### Add the new files to your project.
 
-The scaffolding files added by this process MUST be added to your project via `git add`
+The scaffolding files added by this process must now be added to your project via `git add`
 as they are required to be part of the repository branch that is uploaded to the Upsun server. 
-Some of these file must exist and have been committed before the push to the Upsun environments can be validated.
+Some of these files (`config.yaml`) must exist and have been committed before the push to the Upsun environments can be validated.
