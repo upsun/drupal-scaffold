@@ -28,6 +28,10 @@
           "path": "assets/common/drush/platformsh_deploy_drupal.sh",
           "overwrite": false
         },
+        "[project-root]/drush/platformsh_generate_drush_yml.php": {
+          "path": "assets/common/drush/platformsh_generate_drush_yml.php",
+          "overwrite": false
+        },
         "[web-root]/sites/default/settings.php": {
           "append": "assets/common/web/sites/default/settings.php.append",
           "overwrite": false,
@@ -39,5 +43,10 @@
         }
       }
     }
+  },
+  "scripts": {
+    "pre-drupal-scaffold-cmd": [
+      "printenv && cd web && if [ ! -f sites/default/settings.php ] ; then ; cp sites/default/default.settings.php sites/default/settings.php; fi"
+    ]
   }
 }
