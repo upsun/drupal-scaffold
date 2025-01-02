@@ -29,11 +29,12 @@
           "overwrite": false
         },
         "[web-root]/sites/default/settings.php": {
-          "append": "assets/common/sites/default/settings.php.append",
-          "overwrite": false
+          "append": "assets/common/web/sites/default/settings.php.append",
+          "overwrite": false,
+          "force-append": true
         },
         "[web-root]/sites/default/settings.platformsh.php": {
-          "path": "assets/common/sites/default/settings.platformsh.php",
+          "path": "assets/common/web/sites/default/settings.platformsh.php",
           "overwrite": false
         }
       }
