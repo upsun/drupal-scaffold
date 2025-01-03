@@ -130,7 +130,7 @@ applications:
                 auto-update:
                     command: |
                         curl -fsS https://raw.githubusercontent.com/platformsh/source-operations/main/setup.sh | { bash /dev/fd/3 sop-autoupdate; } 3<&0
-            root: /web/
+            root: /
 services:
     db:
         type: mariadb:10.11
