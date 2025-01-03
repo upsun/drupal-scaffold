@@ -29,3 +29,15 @@ composer require upsun/drupal-scaffold dev-main
 The scaffolding files added by this process must now be added to your project via `git add`
 as they are required to be part of the repository branch that is uploaded to the Upsun server. 
 Some of these files (`config.yaml`) must exist and have been committed before the push to the Upsun environments can be validated.
+
+### What it does
+
+* Adds required upsun config file `config.yaml`
+  * which defines the database services, web behaviour, and deployment actions
+* Adds Platform.sh config reader 
+  * which is used to pull in the environment connection information
+* Adds configurations to settings.php to use the environment settings.
+  * Such as the DB connection details
+* Adds drush support with some helper scripts
+  * `drush/*`, `.environmnent`
+* Requires `drush/drush` and `drupal/redis` libraries for optimal behaviour.
