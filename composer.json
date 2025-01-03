@@ -20,6 +20,10 @@
           "path": "assets/common/.gitignore",
           "overwrite": false
         },
+        "[project-root]/.environment": {
+          "path": "assets/common/.environment",
+          "overwrite": false
+        },
         "[project-root]/.upsun/config.yaml": {
           "path": "assets/common/.upsun/config.yaml",
           "overwrite": false
