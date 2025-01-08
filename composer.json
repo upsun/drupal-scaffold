@@ -49,7 +49,7 @@
         },
         "[web-root]/sites/default/settings.platformsh.php": {
           "path": "assets/common/web/sites/default/settings.platformsh.php",
-          "overwrite": false
+          "overwrite": true
         }
       }
     }
