@@ -118,6 +118,9 @@ if ($platformsh->inRuntime()) {
   // keys and such.
   $settings['hash_salt'] = empty($settings['hash_salt']) ? $platformsh->projectEntropy : $settings['hash_salt'];
 
+  // This will prevent Drupal from setting read-only permissions on sites/default.
+  $settings['skip_permissions_hardening'] = TRUE;
+
   // Set the deployment identifier, which is used by some Drupal cache systems.
   $settings['deployment_identifier'] = $settings['deployment_identifier'] ?? $platformsh->treeId;
 }
