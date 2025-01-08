@@ -1,19 +1,21 @@
+# Upsun+Drupal Composer Scaffold
+
 * Based on the [drupal/core-composer-scaffold](https://www.drupal.org/docs/develop/using-composer/using-drupals-composer-scaffold)
 * See also [Using the new Drupal 8 core scaffolding tool (2020) Docksal example](https://medium.com/@twfahey/using-the-new-d8-core-scaffolding-tool-48cbda9c1cd3)
 
-# Upsun+Drupal Composer Scaffold
-
-This project provides a composer plugin for placing scaffold files (like
-`.upsun/config.json`, `settings.platformsh.php`, …) into their desired
-location within the project.
+This project provides a composer plugin for placing scaffold files 
+(like `.upsun/config.json`, `settings.platformsh.php`, …) 
+into their desired location within an existing Drupal project to make it work on Upsun hosting.
 
 ## Usage
 
-Upsun-Drupal Composer Scaffold is used by requiring `upsun/drupal-scaffold` in your
+Upsun-Drupal Composer Scaffold is applied by requiring `upsun/drupal-scaffold` in your
 project, and adding it to the list of `drupal-scaffold.allowed-packages`
 
 Once installed, the scaffold operations run automatically as needed, e.g. after
 `composer install`.
+
+## Installation
 
 To add this feature to an existing Drupal project that was built in the `recommended-project` structure, 
 
@@ -23,16 +25,15 @@ composer config --json --merge extra.drupal-scaffold.allowed-packages '["upsun/d
 composer require upsun/drupal-scaffold dev-main
 ```
 
-
 ### Add the new files to your project.
 
 The scaffolding files added by this process must now be added to your project via `git add`
 as they are required to be part of the repository branch that is uploaded to the Upsun server. 
 Some of these files (`config.yaml`) must exist and have been committed before the push to the Upsun environments can be validated.
 
-### What it does
+### What the scaffolding addition does
 
-* Adds required upsun config file `config.yaml`
+* Adds required Upsun config file `config.yaml`
   * which defines the database services, web behaviour, and deployment actions
 * Adds Platform.sh config reader 
   * which is used to pull in the environment connection information
@@ -41,3 +42,38 @@ Some of these files (`config.yaml`) must exist and have been committed before th
 * Adds drush support with some helper scripts
   * `drush/*`, `.environmnent`
 * Requires `drush/drush` and `drupal/redis` libraries for optimal behaviour.
+
+### Adjustments
+
+[Review the docs for troubleshooting tips](https://docs.upsun.com/get-started/here/configure.html#errors-on-first-push)
+
+If you used the Drupal recommended-project as a starter, 
+then your web-root inside your project will be `web/`. This is the assumed default.
+Your current Drupals `composer.json` may include the section that looks like this:
+
+```json
+    "extra": {
+        "drupal-scaffold": {
+            "locations": {
+                "web-root": "web/"
+```
+
+If your project is structured a little differently, using `docroot` or `public`
+as the web-root, then you should adjust the provided scaffold file 
+`.upsun/config.yaml` accordingly, 
+replacing most instances of `web/` with your actual web-root path.
+Importantly, the `applications.drupal.web.locations./.root` value.
+and also `applications.drupal.mounts."/web/sites/default/files"` 
+
+Places to look:
+
+```
+yq '.applications.drupal.web.locations./.root' < .upsun/config.yaml
+yq '.applications.drupal.mounts | keys' < .upsun/config.yaml
+```
+
+
+## Deploy
+
+Once the `drupal-scaffold` changes have been added to your repository, 
+your project should be ready to push into an Upsun project and begin working.

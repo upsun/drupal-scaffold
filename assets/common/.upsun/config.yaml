@@ -70,7 +70,7 @@ applications:
                 #   - `cache-rebuild`
                 #   - `updatedb`
                 #   - and if config files are present, `config-import`
-                cd web
+                # cd web
                 bash $PLATFORM_APP_DIR/drush/platformsh_deploy_drupal.sh
         # The configuration of app when it is exposed to the web.
         web:
