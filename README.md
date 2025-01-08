@@ -77,3 +77,18 @@ yq '.applications.drupal.mounts | keys' < .upsun/config.yaml
 
 Once the `drupal-scaffold` changes have been added to your repository, 
 your project should be ready to push into an Upsun project and begin working.
+
+If you don't have an Upsun project created already,
+then you'll have to [create a project either through the console or the CLI](https://docs.upsun.com/get-started/here/create-project.html).
+
+### Gotcha: Use the right subscription plan.
+
+> Note, if creating your project, do not use the `development` subscription plan.
+> It must be `upsun/flexible` or you won't get any resources to begin with.
+
+If you are on the wrong plan, need to update things before pushing successfully/
+```
+upsun resources:get
+upsun subscription:info plan 'upsun/flexible'
+upsun resources:set --disk drupal:512,db:614512
+```
