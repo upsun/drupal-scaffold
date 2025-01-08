@@ -26,8 +26,8 @@
           "path": "assets/common/.environment",
           "overwrite": false
         },
-        "[project-root]/config/sync/.gitkeep": {
-          "path": "assets/common/config/sync/.gitkeep"
+        "[project-root]/config/sync/.htaccess": {
+          "path": "assets/common/config/sync/.htaccess"
         },
         "[project-root]/.upsun/config.yaml": {
           "path": "assets/common/.upsun/config.yaml",
