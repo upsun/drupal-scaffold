@@ -141,12 +141,18 @@ add_scaffolding(){
 
   composer require --no-interaction --ignore-platform-reqs  upsun/drupal-scaffold dev-main
 
-  # May also need to tweak some version stuff. Drupal 8 requires PHP 7
+  # May also need to tweak some version stuff.
+  # Drupal 8 requires PHP 7
   # so need to tweak .upsun/config.yaml
   # Edit the config.yaml with yq to set the PHP version
   # modified=$(cat .upsun/config.yaml | yq '.applications.drupal.type = "php:7.2"') && echo $modified > .upsun/config.yaml
   # or more manually:
   # sed -i.bak -E "s/^([[:space:]]*type:[[:space:]]*'php:)[^']+'/\17.0'/" .upsun/config.yaml
+  # Also, platform.sh configreader of the Drupal8. php7 era had a different api.
+  # Error: Call to undefined method Platformsh\ConfigReader\Config::hasRelationship()
+  # So that will mean that the Drupal8 settings.platformsh.php will need to be unique.
+  # OK, need to support this by having different content in different versions of the scaffold repo.
+  # then applying the constraints. Tricky but not too hard.
 
   git add .
   git commit -m "Built Drupal site with Upsun scaffolding additions"
