@@ -140,8 +140,17 @@ add_scaffolding(){
   composer config --no-interaction --json --merge extra.drupal-scaffold.allowed-packages '["upsun/drupal-scaffold"]'
 
   composer require --no-interaction --ignore-platform-reqs  upsun/drupal-scaffold dev-main
+
+  # May also need to tweak some version stuff. Drupal 8 requires PHP 7
+  # so need to tweak .upsun/config.yaml
+  # Edit the config.yaml with yq to set the PHP version
+  # modified=$(cat .upsun/config.yaml | yq '.applications.drupal.type = "php:7.2"') && echo $modified > .upsun/config.yaml
+  # or more manually:
+  # sed -i.bak -E "s/^([[:space:]]*type:[[:space:]]*'php:)[^']+'/\17.0'/" .upsun/config.yaml
+
   git add .
   git commit -m "Built Drupal site with Upsun scaffolding additions"
+
 }
 
 prepare_new_working_branch(){
@@ -154,7 +163,8 @@ deploy_project_to_new_branch(){
   BRANCH="$1"
   print_log "Pushing current state to branch $BRANCH"
   git push --set-upstream $REPO_ID "$BRANCH"
-  $PROVIDER_CLI environment:activate --no-clone-parent --environment=$BRANCH
+  # Seems that we cannot currently activate an environment without parent data --no-clone-parent
+  $PROVIDER_CLI --no-interaction environment:activate --environment=$BRANCH
 }
 
 
