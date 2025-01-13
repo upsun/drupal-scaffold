@@ -4,7 +4,7 @@
 * See also [Using the new Drupal 8 core scaffolding tool (2020) Docksal example](https://medium.com/@twfahey/using-the-new-d8-core-scaffolding-tool-48cbda9c1cd3)
 
 This project provides a composer plugin for placing scaffold files 
-(like `.upsun/config.json`, `settings.platformsh.php`, …) 
+(like `.upsun/config.yaml`, `settings.platformsh.php`, …) 
 into their desired location within an existing Drupal project to make it work on Upsun hosting.
 
 ## Usage
