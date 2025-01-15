@@ -11,7 +11,7 @@
   ],
   "require": {
     "drupal/core-composer-scaffold": "*",
-    "drupal/core-reccommended": "10.x",
+    "drupal/core-recommended": "10.x",
     "platformsh/config-reader": "*",
     "drush/drush": "*",
     "drupal/redis": "*"
