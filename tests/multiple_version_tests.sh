@@ -92,9 +92,7 @@ build_project_from_zip(){
 
   default_url="https://ftp.drupal.org/files/projects/cms-1.0.0-rc2.zip"
   zip_url="${1:-$default_url}"
-
-  # Ensure current working branch is empty.
-  git reset --hard --root && git rm -rf .
+  print_log "Creating project Based on zip $default_url"
 
   result_file=$(curl --remote-name --remote-header-name --write-out '%{filename_effective}\n' $zip_url)
   # Assume that this will unpack into a subdirectory, but need detect what the name of that subdirectory is.
@@ -103,13 +101,14 @@ build_project_from_zip(){
   mv extracted/${subdir}/* .
   rmdir extracted/${subdir} extracted
   rm "$result_file"
+  print_log "Zip content extracted. Preparing git"
 
   add_starter_gitignore
   git add .
   git commit -m "Unpacked fresh from $zip_url"
 }
 
-build_drupal_from_git(){
+build_project_from_git(){
   repository_url="$1"
   # git clone but abandon the history
   mkdir temp_checkout
@@ -162,6 +161,8 @@ add_scaffolding(){
 prepare_new_working_branch(){
   BRANCH="$1"
   print_log "Switching to new empty branch $BRANCH"
+  git reset
+  git clean -df
   git switch --orphan "$BRANCH" && git reset --hard && git clean -fdx
 }
 
@@ -173,19 +174,31 @@ deploy_project_to_new_branch(){
   $PROVIDER_CLI --no-interaction environment:activate --environment=$BRANCH
 }
 
+deploy_all_drupal_versions(){
+  VERSIONS=( 8.x 9.x 10.x 11.x )
+  for VERSION in "${VERSIONS[@]}"
+  do
+     APP_VERSION="drupal/recommended-project:$VERSION"
+     # prepare git branch
+     BRANCH=$(slugify $APP_VERSION)
+     prepare_new_working_branch $BRANCH
+     # checkout new codebase
+     build_project_from_composer $APP_VERSION
+     add_scaffolding
+     # push new code into project environment
+     deploy_project_to_new_branch $BRANCH
+  done
+}
+
+
+deploy_drupal_cms(){
+  BRANCH=$(slugify "cms-1.0.0")
+  prepare_new_working_branch $BRANCH
+  build_project_from_zip "https://ftp.drupal.org/files/projects/cms-1.0.0-rc2.zip"
+  add_scaffolding
+  deploy_project_to_new_branch $BRANCH
+}
 
 prepare_project;
 
-VERSIONS=( 8.x 9.x 10.x 11.x )
-for VERSION in "${VERSIONS[@]}"
-do
-   APP_VERSION="drupal/recommended-project:$VERSION"
-   # prepare git branch
-   BRANCH=$(slugify $APP_VERSION)
-   prepare_new_working_branch $BRANCH
-   # checkout new codebase
-   build_project_from_composer $APP_VERSION
-   add_scaffolding
-   # push new code into project environment
-   deploy_project_to_new_branch $BRANCH
-done
+deploy_drupal_cms;
