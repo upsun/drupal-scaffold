@@ -148,12 +148,19 @@ build_project_from_git(){
 add_starter_gitignore(){
   # Avoid adding vendor etc in the beginning.
   # Good templates already do this, but we have to specify this explicitly in basic cases.
-  echo "vendor" >> .gitignore
-  echo "web/core" >> .gitignore
-  echo "web/modules/contrib" >> .gitignore
+
   # This starter gitignore should be refined and replaced
   # as the real project parameters are established.
   # It is not comprehensive
+
+  echo "vendor" >> .gitignore
+  echo "web/core" >> .gitignore
+  echo "web/modules/contrib" >> .gitignore
+  # For the purposes of rapid building, we do NOT add composer.lock to the project yet.
+  # composer.lock will be built dependant on the current runtime php version available,
+  # And that will not always be suitable for all builds. If I exclude it for now,
+  # then composer can do its own build remotely during hook_build.
+  echo "composer.lock" >> .gitignore
 }
 
 add_scaffolding(){
@@ -212,17 +219,23 @@ deploy_project_to_new_branch(){
 
 deploy_all_drupal_versions(){
   VERSIONS=( 8.x 9.x 10.x 11.x )
-  for VERSION in "${VERSIONS[@]}"
-  do
-     APP_VERSION="drupal/recommended-project:$VERSION"
-     # prepare git branch
-     BRANCH=$(slugify $APP_VERSION)
-     prepare_new_working_branch $BRANCH || continue
-     # checkout new codebase
-     build_project_from_composer $APP_VERSION
-     add_scaffolding
-     # push new code into project environment
-     deploy_project_to_new_branch $BRANCH
+  for VERSION in "${VERSIONS[@]}" ; do
+    APP_VERSION="drupal/recommended-project:$VERSION"
+    # prepare git branch
+    BRANCH=$(slugify $APP_VERSION)
+    prepare_new_working_branch $BRANCH || continue
+    # checkout new codebase
+    build_project_from_composer $APP_VERSION
+
+    # Need to specify the target PHP version to ensure the composer build will be viable.
+    # TODO: generic this or avoid somehow.
+    #if [ "$APP_VERSION" == "drupal-recommended-project-8-x" ] ; then
+    # composer config platform.php 7.4
+    #fi
+
+    add_scaffolding
+    # push new code into project environment
+    deploy_project_to_new_branch $BRANCH
   done
 }
 
@@ -246,6 +259,6 @@ deploy_drupal_cms_from_composer(){
 
 prepare_project;
 
-deploy_drupal_cms_from_zip;
-deploy_drupal_cms_from_composer;
+# deploy_drupal_cms_from_zip;
+# deploy_drupal_cms_from_composer;
 deploy_all_drupal_versions;
