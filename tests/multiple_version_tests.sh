@@ -4,17 +4,21 @@ set -e
 # This script will create a number of different versions of Drupal 8-11
 # and deploy them into a Platform.sh/Upsun project.
 # To reduce the admin footprint, 
-# Each version will be a branch within a given test project, but effectively entirely independant.
+# Each version will be a branch within a given test project, but effectively entirely independent.
 
 # If this script is called with an existing `$PLATFORM_PROJECT` ID value,
 # then the builds will happen there.
-# If PLATFORM_PROJECT is undefined, one will be created.
+# If PLATFORM_PROJECT is undefined, a new one will be created.
 
-# It will be required to activate the environments independantly, 
+# It will be required to activate the environments to see them run,
 # so the project should have enough supported environments in the subscription to maintain the m all.
 
 export PLATFORM_PROJECT=${1:-$PLATFORM_PROJECT}
-export PROVIDER_CLI="upsun"
+
+# By default builds will happen in upsun.
+# Can switch to `platform` classic by setting this variable.
+export PROVIDER_CLI=${PROVIDER_CLE:-upsun}
+# Remote repo id. 'upsun' or 'platform' by convention instead of 'origin'
 export REPO_ID=$PROVIDER_CLI
 
 # Helpers
@@ -26,11 +30,15 @@ slugify() {
 }
 
 # Subroutines
+
 prepare_project(){
   # Check destination project.
   # Create a new one if not already defined.
+  # Otherwise, build all these test cases in branches in the currently active project.
+  # Current project should be defined by setting PLATFORM_PROJECT in the context.
+
   if [ -z "${PLATFORM_PROJECT}" ]; then
-    # Verify that we have an active account.
+    # Paranoia: Verify that we have an active account.
     # If pulling this auth info fails, crash out now.
     ${PROVIDER_CLI} auth:info
     PROJECT_NAME="Deployment testing"
@@ -71,11 +79,17 @@ prepare_project(){
 
 
 build_project_from_composer() {
+  # Run composer create-project,
+  # do some housekeeping,
+  # and make an initial git commit.
+  # Assumes we are in an already-working git repo/branch
+
   COMPOSER_IDENTIFIER="$1"
   print_log "Creating project $COMPOSER_IDENTIFIER"
   # Ignore platform requirements as the local workspace may not reflect the php etc version requirements.
-  composer create-project --ignore-platform-reqs --no-interaction  "$COMPOSER_IDENTIFIER" "extracted"
+  composer create-project --ignore-platform-reqs --no-interaction --no-install "$COMPOSER_IDENTIFIER" "extracted"
 
+  # Move extracted stuff up into current working directory
   mv extracted/* .
   mv extracted/.* . || true
   rmdir extracted
@@ -88,7 +102,7 @@ build_project_from_composer() {
 build_project_from_zip(){
   # Download a zip, unpack it, relocate everything into the current working directory.
   # Add everything to the current git branch.
-  # Assumes we are in an already-working git repo/
+  # Assumes we are in an already-working git repo/branch
 
   default_url="https://ftp.drupal.org/files/projects/cms-1.0.0-rc2.zip"
   zip_url="${1:-$default_url}"
@@ -109,6 +123,13 @@ build_project_from_zip(){
 }
 
 build_project_from_git(){
+  # Checks out a given branch of a given repo (URL),
+  # relocate everything into the current working directory.
+  # Add everything to the current git branch.
+  # Assumes we are in an already-working git repo/branch
+  # so needs to use a temp directory for the checkout,
+  # then imports the new content into the existing repo.
+
   repository_url="$1"
   # git clone but abandon the history
   mkdir temp_checkout
@@ -126,31 +147,34 @@ build_project_from_git(){
 
 add_starter_gitignore(){
   # Avoid adding vendor etc in the beginning.
-  # good templates already do this, but we have to specify this explicitly in basic cases.
+  # Good templates already do this, but we have to specify this explicitly in basic cases.
   echo "vendor" >> .gitignore
   echo "web/core" >> .gitignore
   echo "web/modules/contrib" >> .gitignore
+  # This starter gitignore should be refined and replaced
+  # as the real project parameters are established.
+  # It is not comprehensive
 }
 
 add_scaffolding(){
+  # Add the requirement for the upsun-specific scaffolding & config files.
   print_log "Adding upsun/drupal-scaffold"
   composer config --no-interaction  allow-plugins true
   composer config --no-interaction repositories.upsun-drupal-scaffold vcs https://github.com/upsun/drupal-scaffold
   composer config --no-interaction --json --merge extra.drupal-scaffold.allowed-packages '["upsun/drupal-scaffold"]'
 
   composer require --no-interaction --ignore-platform-reqs  upsun/drupal-scaffold
-  # dev-main for latest, but
-  # If the repository tagging is correct, then the right instance of this library
-  # for the current version of drupal core should be pulled in during version resolution.
 
-  # May also need to tweak some version stuff.
+  # There will need to be subtle variations in the drupal-scaffold version to match the Drupal version.
+  # The composer version resolution should resolve to the correct set of requirments.
+
   # Drupal 8 requires PHP 7
-  # so need to tweak .upsun/config.yaml
-  # Edit the config.yaml with yq to set the PHP version
-  # modified=$(cat .upsun/config.yaml | yq '.applications.drupal.type = "php:7.2"') && echo $modified > .upsun/config.yaml
-  # or more manually:
-  # sed -i.bak -E "s/^([[:space:]]*type:[[:space:]]*'php:)[^']+'/\17.0'/" .upsun/config.yaml
+  # Drupal 10 works best with PHP8.1
+  # Drupal 11 requires PHP 8.3
+  # Drupal-cms (Drupal core 11) needs an additional cache folder
+
   # Also, platform.sh configreader of the Drupal8. php7 era had a different api.
+
   # Error: Call to undefined method Platformsh\ConfigReader\Config::hasRelationship()
   # So that will mean that the Drupal8 settings.platformsh.php will need to be unique.
   # OK, need to support this by having different content in different versions of the scaffold repo.
@@ -158,11 +182,19 @@ add_scaffolding(){
 
   git add .
   git commit -m "Built Drupal site with Upsun scaffolding additions"
-
 }
 
 prepare_new_working_branch(){
+  # Clear out the current working directory,
+  # and prepare a new empty git branch.
   BRANCH="$1"
+
+  if [[ ! -z "$(git ls-remote --heads $REPO_ID ${BRANCH})" ]] ; then
+    echo "Branch '$BRANCH' already exists remotely in '$REPO_ID' repository." ;
+    echo "Aborting this build."
+    return 39 # directory not empty - close enough to the error description.
+  fi
+
   print_log "Switching to new empty branch $BRANCH"
   git reset
   git clean -df
@@ -170,6 +202,7 @@ prepare_new_working_branch(){
 }
 
 deploy_project_to_new_branch(){
+  # Do the push to platform and activate the environment.
   BRANCH="$1"
   print_log "Pushing current state to branch $BRANCH"
   git push --set-upstream $REPO_ID "$BRANCH"
@@ -184,7 +217,7 @@ deploy_all_drupal_versions(){
      APP_VERSION="drupal/recommended-project:$VERSION"
      # prepare git branch
      BRANCH=$(slugify $APP_VERSION)
-     prepare_new_working_branch $BRANCH
+     prepare_new_working_branch $BRANCH || continue
      # checkout new codebase
      build_project_from_composer $APP_VERSION
      add_scaffolding
@@ -194,14 +227,25 @@ deploy_all_drupal_versions(){
 }
 
 
-deploy_drupal_cms(){
+deploy_drupal_cms_from_zip(){
   BRANCH=$(slugify "cms-1.0.0")
-  prepare_new_working_branch $BRANCH
+  prepare_new_working_branch $BRANCH || return 0
   build_project_from_zip "https://ftp.drupal.org/files/projects/cms-1.0.0-rc2.zip"
+  add_scaffolding
+  deploy_project_to_new_branch $BRANCH
+}
+
+deploy_drupal_cms_from_composer(){
+  COMPOSER_IDENTIFIER="drupal/cms:^1"
+  BRANCH=$(slugify "$COMPOSER_IDENTIFIER")
+  prepare_new_working_branch $BRANCH || return 0
+  build_project_from_composer $COMPOSER_IDENTIFIER
   add_scaffolding
   deploy_project_to_new_branch $BRANCH
 }
 
 prepare_project;
 
-deploy_drupal_cms;
+deploy_drupal_cms_from_zip;
+deploy_drupal_cms_from_composer;
+deploy_all_drupal_versions;
