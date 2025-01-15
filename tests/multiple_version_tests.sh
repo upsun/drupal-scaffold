@@ -169,8 +169,9 @@ add_scaffolding(){
   # The composer version resolution should resolve to the correct set of requirments.
 
   # Drupal 8 requires PHP 7
-  # Drupal 10 works best with PHP8.1
-  # Drupal 11 requires PHP 8.3
+  # Drupal9 works with PHP 7.3 - 8.1 but not 8.2
+  # Drupal 10 works with PHP 8.1
+  # Drupal 11 requires at least PHP 8.3
   # Drupal-cms (Drupal core 11) needs an additional cache folder
 
   # Also, platform.sh configreader of the Drupal8. php7 era had a different api.

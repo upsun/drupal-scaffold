@@ -1,7 +1,7 @@
 applications:
     drupal:
         # The runtime the application uses.
-        type: 'php:8.2'
+        type: 'php:8.0'
         dependencies:
             php:
                 composer/composer: '^2.1'
