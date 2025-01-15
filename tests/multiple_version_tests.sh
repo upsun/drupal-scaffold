@@ -138,7 +138,10 @@ add_scaffolding(){
   composer config --no-interaction repositories.upsun-drupal-scaffold vcs https://github.com/upsun/drupal-scaffold
   composer config --no-interaction --json --merge extra.drupal-scaffold.allowed-packages '["upsun/drupal-scaffold"]'
 
-  composer require --no-interaction --ignore-platform-reqs  upsun/drupal-scaffold dev-main
+  composer require --no-interaction --ignore-platform-reqs  upsun/drupal-scaffold
+  # dev-main for latest, but
+  # If the repository tagging is correct, then the right instance of this library
+  # for the current version of drupal core should be pulled in during version resolution.
 
   # May also need to tweak some version stuff.
   # Drupal 8 requires PHP 7
