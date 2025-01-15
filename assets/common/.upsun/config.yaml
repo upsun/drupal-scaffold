@@ -49,6 +49,16 @@ applications:
             '/.console':
                 source: storage
                 source_path: 'console'
+
+            # Due to some interim problem in the installer
+            # https://www.drupal.org/project/drupal_cms/issues/3497786
+            # seems that we need a cache directory to be writable (or empty)
+            # TODO - this may get fixed after Drupal CMS launch.
+            '/web/profiles/drupal_cms_installer/cache':
+                source: storage
+                source_path: 'installer-cache'
+
+
         # Configuration of the build of this application.
         build:
             flavor: composer
