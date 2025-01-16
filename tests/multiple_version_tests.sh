@@ -176,7 +176,6 @@ add_scaffolding(){
   composer config --no-interaction --json --merge extra.drupal-scaffold.allowed-packages '["upsun/drupal-scaffold"]'
 
   composer require --no-interaction --ignore-platform-reqs  upsun/drupal-scaffold
-  # Optionally I may want to `--platform php=X.Y.Z` to allow the build of composer.lock to match the target
 
   # There will need to be subtle variations in the drupal-scaffold version to match the Drupal version.
   # The composer version resolution should resolve to the correct set of requirments.
