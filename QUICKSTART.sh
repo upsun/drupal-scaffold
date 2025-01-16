@@ -58,6 +58,10 @@ upsun project:create \
 
 # Wait here for project creation to complete...
 
+# Prevent unwanted bots from visiting our site until we are ready
+# Unexpected visitors hitting Drupal while the install wizard is running creates a nasty race condition.
+upsun environment:http-access -e main --auth username:password
+
 git push --set-upstream upsun main
 
 # New environment for new branch on new project should be ready to go.

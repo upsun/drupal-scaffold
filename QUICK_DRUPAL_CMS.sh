@@ -19,4 +19,5 @@ upsun project:create -y \
   --org="$(upsun  organization:list --my --columns=id --format=plain --no-header | head -1)" \
   --title="drupal-cms" --plan="upsun/flexible" --region="eu-5.platform.sh" \
   --default-branch=main --set-remote
+upsun environment:http-access -e main --auth username:password
 git push --set-upstream upsun main
