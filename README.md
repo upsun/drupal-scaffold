@@ -22,8 +22,12 @@ To add this feature to an existing Drupal project that was built in the `recomme
 ```
 composer config repositories.upsun-drupal-scaffold vcs https://github.com/upsun/drupal-scaffold
 composer config --json --merge extra.drupal-scaffold.allowed-packages '["upsun/drupal-scaffold"]'
-composer require upsun/drupal-scaffold dev-main
+composer require upsun/drupal-scaffold
 ```
+
+> There are minor variations in the scaffolding files between different versions of Drupal.
+> This project repository supplies different version branches and publishes different constraints
+> that composer will use to automatically resolve which version of the scaffolding should be used.
 
 ### Add the new files to your project.
 
