@@ -13,6 +13,10 @@ set -e
 # It will be required to activate the environments to see them run,
 # so the project should have enough supported environments in the subscription to maintain the m all.
 
+# To avoid complications with the different variations of PHP version requirements,
+# This demo build routine does NOT add composer.lock to the repo.
+# The remote build hook will have to figure out its dependencies based on the actual container environment.
+
 export PLATFORM_PROJECT=${1:-$PLATFORM_PROJECT}
 
 # By default builds will happen in upsun.
@@ -87,6 +91,7 @@ build_project_from_composer() {
   COMPOSER_IDENTIFIER="$1"
   print_log "Creating project $COMPOSER_IDENTIFIER"
   # Ignore platform requirements as the local workspace may not reflect the php etc version requirements.
+  # In fact, don't even attempt to build and resolve dependencies yet.
   composer create-project --ignore-platform-reqs --no-interaction --no-install "$COMPOSER_IDENTIFIER" "extracted"
 
   # Move extracted stuff up into current working directory
@@ -171,6 +176,7 @@ add_scaffolding(){
   composer config --no-interaction --json --merge extra.drupal-scaffold.allowed-packages '["upsun/drupal-scaffold"]'
 
   composer require --no-interaction --ignore-platform-reqs  upsun/drupal-scaffold
+  # Optionally I may want to `--platform php=X.Y.Z` to allow the build of composer.lock to match the target
 
   # There will need to be subtle variations in the drupal-scaffold version to match the Drupal version.
   # The composer version resolution should resolve to the correct set of requirments.
