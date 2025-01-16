@@ -13,6 +13,10 @@ set -e
 # It will be required to activate the environments to see them run,
 # so the project should have enough supported environments in the subscription to maintain the m all.
 
+# To avoid complications with the different variations of PHP version requirements,
+# This demo build routine does NOT add composer.lock to the repo.
+# The remote build hook will have to figure out its dependencies based on the actual container environment.
+
 export PLATFORM_PROJECT=${1:-$PLATFORM_PROJECT}
 
 # By default builds will happen in upsun.
@@ -87,6 +91,7 @@ build_project_from_composer() {
   COMPOSER_IDENTIFIER="$1"
   print_log "Creating project $COMPOSER_IDENTIFIER"
   # Ignore platform requirements as the local workspace may not reflect the php etc version requirements.
+  # In fact, don't even attempt to build and resolve dependencies yet.
   composer create-project --ignore-platform-reqs --no-interaction --no-install "$COMPOSER_IDENTIFIER" "extracted"
 
   # Move extracted stuff up into current working directory
@@ -148,12 +153,19 @@ build_project_from_git(){
 add_starter_gitignore(){
   # Avoid adding vendor etc in the beginning.
   # Good templates already do this, but we have to specify this explicitly in basic cases.
-  echo "vendor" >> .gitignore
-  echo "web/core" >> .gitignore
-  echo "web/modules/contrib" >> .gitignore
+
   # This starter gitignore should be refined and replaced
   # as the real project parameters are established.
   # It is not comprehensive
+
+  echo "vendor" >> .gitignore
+  echo "web/core" >> .gitignore
+  echo "web/modules/contrib" >> .gitignore
+  # For the purposes of rapid building, we do NOT add composer.lock to the project yet.
+  # composer.lock will be built dependant on the current runtime php version available,
+  # And that will not always be suitable for all builds. If I exclude it for now,
+  # then composer can do its own build remotely during hook_build.
+  echo "composer.lock" >> .gitignore
 }
 
 add_scaffolding(){
@@ -164,6 +176,7 @@ add_scaffolding(){
   composer config --no-interaction --json --merge extra.drupal-scaffold.allowed-packages '["upsun/drupal-scaffold"]'
 
   composer require --no-interaction --ignore-platform-reqs  upsun/drupal-scaffold
+  # Optionally I may want to `--platform php=X.Y.Z` to allow the build of composer.lock to match the target
 
   # There will need to be subtle variations in the drupal-scaffold version to match the Drupal version.
   # The composer version resolution should resolve to the correct set of requirments.
@@ -213,17 +226,23 @@ deploy_project_to_new_branch(){
 
 deploy_all_drupal_versions(){
   VERSIONS=( 8.x 9.x 10.x 11.x )
-  for VERSION in "${VERSIONS[@]}"
-  do
-     APP_VERSION="drupal/recommended-project:$VERSION"
-     # prepare git branch
-     BRANCH=$(slugify $APP_VERSION)
-     prepare_new_working_branch $BRANCH || continue
-     # checkout new codebase
-     build_project_from_composer $APP_VERSION
-     add_scaffolding
-     # push new code into project environment
-     deploy_project_to_new_branch $BRANCH
+  for VERSION in "${VERSIONS[@]}" ; do
+    APP_VERSION="drupal/recommended-project:$VERSION"
+    # prepare git branch
+    BRANCH=$(slugify $APP_VERSION)
+    prepare_new_working_branch $BRANCH || continue
+    # checkout new codebase
+    build_project_from_composer $APP_VERSION
+
+    # Need to specify the target PHP version to ensure the composer build will be viable.
+    # TODO: generic this or avoid somehow.
+    #if [ "$APP_VERSION" == "drupal-recommended-project-8-x" ] ; then
+    # composer config platform.php 7.4
+    #fi
+
+    add_scaffolding
+    # push new code into project environment
+    deploy_project_to_new_branch $BRANCH
   done
 }
 
@@ -247,6 +266,6 @@ deploy_drupal_cms_from_composer(){
 
 prepare_project;
 
-deploy_drupal_cms_from_zip;
-deploy_drupal_cms_from_composer;
+# deploy_drupal_cms_from_zip;
+# deploy_drupal_cms_from_composer;
 deploy_all_drupal_versions;
