@@ -45,7 +45,7 @@
         },
         "[web-root]/sites/default/settings.php": {
           "append": "assets/common/web/sites/default/settings.php.append",
-          "overwrite": false,
+          "overwrite": true,
           "force-append": true,
           "default": "assets/common/web/sites/default/default.settings.php"
         },
