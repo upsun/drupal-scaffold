@@ -3,7 +3,7 @@ set -e
 
 # This script will create a number of different versions of Drupal 8-11
 # and deploy them into a Platform.sh/Upsun project.
-# To reduce the admin footprint, 
+# To reduce the admin footprint,
 # Each version will be a branch within a given test project, but effectively entirely independent.
 
 # If this script is called with an existing `$PLATFORM_PROJECT` ID value,
@@ -21,13 +21,13 @@ export PLATFORM_PROJECT=${1:-$PLATFORM_PROJECT}
 
 # By default builds will happen in upsun.
 # Can switch to `platform` classic by setting this variable.
-export PROVIDER_CLI=${PROVIDER_CLE:-upsun}
+export PROVIDER_CLI=${PROVIDER_CLI:-upsun}
 # Remote repo id. 'upsun' or 'platform' by convention instead of 'origin'
 export REPO_ID=$PROVIDER_CLI
 
 # Helpers
 print_log() {
-  >&2 echo -e "  $@";
+  >&2 echo -e "  $@"
 }
 slugify() {
   echo "$1" | iconv -t ascii//TRANSLIT | sed -E 's/[~\^]+//g' | sed -E 's/[^a-zA-Z0-9]+/-/g' | sed -E 's/^-+\|-+$//g' | sed -E 's/^-+//g' | sed -E 's/-+$//g' | tr A-Z a-z
@@ -35,7 +35,7 @@ slugify() {
 
 # Subroutines
 
-prepare_project(){
+prepare_project() {
   # Check destination project.
   # Create a new one if not already defined.
   # Otherwise, build all these test cases in branches in the currently active project.
@@ -46,18 +46,20 @@ prepare_project(){
     # If pulling this auth info fails, crash out now.
     ${PROVIDER_CLI} auth:info
     PROJECT_NAME="Deployment testing"
-    ORG_ID=$(${PROVIDER_CLI}  organization:list --my --columns=id --format=plain --no-header | head -1)
+    ORG_ID=$(${PROVIDER_CLI} organization:list --my --columns=id --format=plain --no-header | head -1)
     REGION=${REGION:-eu-5.platform.sh}
     print_log "Creating new project '$PROJECT_NAME' to run test deployments, in $REGION"
 
     printf 'Continue? (Y/n)? '
     old_stty_cfg=$(stty -g)
-    stty raw -echo ; answer=$(head -c 1) ; stty $old_stty_cfg
-    if [ "$answer" != "${answer#[Yy]}" ];then
-        true; # continue
+    stty raw -echo
+    answer=$(head -c 1)
+    stty $old_stty_cfg
+    if [ "$answer" != "${answer#[Yy]}" ]; then
+      true # continue
     else
-        print_log "We need a project. Please provide a Project ID as arg1, or set PLATFORM_PROJECT in the environment.";
-        exit 1
+      print_log "We need a project. Please provide a Project ID as arg1, or set PLATFORM_PROJECT in the environment."
+      exit 1
     fi
 
     PLATFORM_PROJECT=$(${PROVIDER_CLI} project:create \
@@ -67,20 +69,19 @@ prepare_project(){
       --region="$REGION" \
       --default-branch=main \
       --set-remote \
-      -y )
-      # Wait here for project creation to complete...
-      export PLATFORM_PROJECT;
-      if [ -z "${PLATFORM_PROJECT}" ]; then
-        print_log "PROJECT_CREATION_FAILED"
-        exit 1
-      fi
+      -y)
+    # Wait here for project creation to complete...
+    export PLATFORM_PROJECT
+    if [ -z "${PLATFORM_PROJECT}" ]; then
+      print_log "PROJECT_CREATION_FAILED"
+      exit 1
+    fi
   fi
 
   PROJECT_TITLE="$(${PROVIDER_CLI} project:info title)"
   export PROJECT_TITLE
   print_log "Ready to build destination environments in project $PLATFORM_PROJECT '$PROJECT_TITLE' "
 }
-
 
 build_project_from_composer() {
   # Run composer create-project,
@@ -104,7 +105,7 @@ build_project_from_composer() {
   git commit -m "Created fresh project from $COMPOSER_IDENTIFIER"
 }
 
-build_project_from_zip(){
+build_project_from_zip() {
   # Download a zip, unpack it, relocate everything into the current working directory.
   # Add everything to the current git branch.
   # Assumes we are in an already-working git repo/branch
@@ -127,7 +128,7 @@ build_project_from_zip(){
   git commit -m "Unpacked fresh from $zip_url"
 }
 
-build_project_from_git(){
+build_project_from_git() {
   # Checks out a given branch of a given repo (URL),
   # relocate everything into the current working directory.
   # Add everything to the current git branch.
@@ -150,7 +151,7 @@ build_project_from_git(){
   git commit -m "Cloned fresh from $repository_url"
 }
 
-add_starter_gitignore(){
+add_starter_gitignore() {
   # Avoid adding vendor etc in the beginning.
   # Good templates already do this, but we have to specify this explicitly in basic cases.
 
@@ -158,24 +159,24 @@ add_starter_gitignore(){
   # as the real project parameters are established.
   # It is not comprehensive
 
-  echo "vendor" >> .gitignore
-  echo "web/core" >> .gitignore
-  echo "web/modules/contrib" >> .gitignore
+  echo "vendor" >>.gitignore
+  echo "web/core" >>.gitignore
+  echo "web/modules/contrib" >>.gitignore
   # For the purposes of rapid building, we do NOT add composer.lock to the project yet.
   # composer.lock will be built dependant on the current runtime php version available,
   # And that will not always be suitable for all builds. If I exclude it for now,
   # then composer can do its own build remotely during hook_build.
-  echo "composer.lock" >> .gitignore
+  echo "composer.lock" >>.gitignore
 }
 
-add_scaffolding(){
+add_scaffolding() {
   # Add the requirement for the upsun-specific scaffolding & config files.
   print_log "Adding upsun/drupal-scaffold"
-  composer config --no-interaction  allow-plugins true
+  composer config --no-interaction allow-plugins true
   composer config --no-interaction repositories.upsun-drupal-scaffold vcs https://github.com/upsun/drupal-scaffold
   composer config --no-interaction --json --merge extra.drupal-scaffold.allowed-packages '["upsun/drupal-scaffold"]'
 
-  composer require --no-interaction --ignore-platform-reqs  upsun/drupal-scaffold
+  composer require --no-interaction --ignore-platform-reqs upsun/drupal-scaffold
 
   # There will need to be subtle variations in the drupal-scaffold version to match the Drupal version.
   # The composer version resolution should resolve to the correct set of requirments.
@@ -197,13 +198,13 @@ add_scaffolding(){
   git commit -m "Built Drupal site with Upsun scaffolding additions"
 }
 
-prepare_new_working_branch(){
+prepare_new_working_branch() {
   # Clear out the current working directory,
   # and prepare a new empty git branch.
   BRANCH="$1"
 
-  if [[ ! -z "$(git ls-remote --heads $REPO_ID ${BRANCH})" ]] ; then
-    echo "Branch '$BRANCH' already exists remotely in '$REPO_ID' repository." ;
+  if [[ ! -z "$(git ls-remote --heads $REPO_ID ${BRANCH})" ]]; then
+    echo "Branch '$BRANCH' already exists remotely in '$REPO_ID' repository."
     echo "Aborting this build."
     return 39 # directory not empty - close enough to the error description.
   fi
@@ -214,7 +215,7 @@ prepare_new_working_branch(){
   git switch --orphan "$BRANCH" && git reset --hard && git clean -fdx
 }
 
-deploy_project_to_new_branch(){
+deploy_project_to_new_branch() {
   # Do the push to platform and activate the environment.
   BRANCH="$1"
   print_log "Pushing current state to branch $BRANCH"
@@ -223,9 +224,9 @@ deploy_project_to_new_branch(){
   $PROVIDER_CLI --no-interaction environment:activate --environment=$BRANCH
 }
 
-deploy_all_drupal_versions(){
-  VERSIONS=( 8.x 9.x 10.x 11.x )
-  for VERSION in "${VERSIONS[@]}" ; do
+deploy_all_drupal_versions() {
+  VERSIONS=(8.x 9.x 10.x 11.x)
+  for VERSION in "${VERSIONS[@]}"; do
     APP_VERSION="drupal/recommended-project:$VERSION"
     # prepare git branch
     BRANCH=$(slugify $APP_VERSION)
@@ -245,8 +246,7 @@ deploy_all_drupal_versions(){
   done
 }
 
-
-deploy_drupal_cms_from_zip(){
+deploy_drupal_cms_from_zip() {
   BRANCH=$(slugify "cms-1.0.0")
   prepare_new_working_branch $BRANCH || return 0
   build_project_from_zip "https://ftp.drupal.org/files/projects/cms-1.0.0-rc2.zip"
@@ -254,7 +254,7 @@ deploy_drupal_cms_from_zip(){
   deploy_project_to_new_branch $BRANCH
 }
 
-deploy_drupal_cms_from_composer(){
+deploy_drupal_cms_from_composer() {
   COMPOSER_IDENTIFIER="drupal/cms:^1"
   BRANCH=$(slugify "$COMPOSER_IDENTIFIER")
   prepare_new_working_branch $BRANCH || return 0
@@ -263,8 +263,8 @@ deploy_drupal_cms_from_composer(){
   deploy_project_to_new_branch $BRANCH
 }
 
-prepare_project;
+prepare_project
 
 # deploy_drupal_cms_from_zip;
 # deploy_drupal_cms_from_composer;
-deploy_all_drupal_versions;
+deploy_all_drupal_versions
