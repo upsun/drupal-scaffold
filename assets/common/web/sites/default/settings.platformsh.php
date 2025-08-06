@@ -44,12 +44,17 @@ if (getenv('PLATFORM_ENVIRONMENT_TYPE') == 'production') {
 }
 
 // Enable Redis caching.
-if (!InstallerKernel::installationAttempted() && extension_loaded('redis') && class_exists('Drupal\redis\ClientFactory')) {
+// Uses relationship to a Redis-compatible backend named `cache`.
+if (isset($relationships['cache'])
+  && !InstallerKernel::installationAttempted()
+  && extension_loaded('redis')
+  && class_exists('Drupal\redis\ClientFactory')) {
+  $creds = $relationships['cache'][0];
 
   // Set Redis as the default backend for any cache bin not otherwise specified.
   $settings['cache']['default'] = 'cache.backend.redis';
-  $settings['redis.connection']['host'] = getenv('CACHE_HOST');
-  $settings['redis.connection']['port'] = getenv('CACHE_PORT');
+  $settings['redis.connection']['host'] = $creds['host'];
+  $settings['redis.connection']['port'] = $creds['PORT'];
 
   // Apply changes to the container configuration to better leverage Redis.
   // This includes using Redis for the lock and flood control systems, as well
