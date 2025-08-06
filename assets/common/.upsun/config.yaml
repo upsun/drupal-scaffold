@@ -35,20 +35,6 @@ applications:
             '/private':
                 source: storage
                 source_path: 'private'
-            # Drush needs a scratch space for its own caches.
-            '/.drush':
-                source: storage
-                source_path: 'drush'
-            # Drush will try to save backups to this directory, so it must be
-            # writeable even though you will almost never need to use it.
-            '/drush-backups':
-                source: storage
-                source_path: 'drush-backups'
-            # Drupal Console will try to save backups to this directory, so it must be
-            # writeable even though you will almost never need to use it.
-            '/.console':
-                source: storage
-                source_path: 'console'
         # Configuration of the build of this application.
         build:
             flavor: composer
@@ -64,7 +50,6 @@ applications:
             # fast.
             deploy: |
                 set -e
-                php ./drush/platformsh_generate_drush_yml.php
                 # if drupal is installed, will call the following drush commands:
                 #   - `cache-rebuild`
                 #   - `updatedb`
