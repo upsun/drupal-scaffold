@@ -18,7 +18,7 @@ applications:
         # side is in the form `<service name>:<endpoint name>`.
         relationships:
             database: 'db:mysql'
-            redis: 'cache:redis'
+            cache: 'cache:redis'
         # The 'mounts' describe writable, persistent filesystem mounts in the application.
         mounts:
             # The default Drupal files directory.
