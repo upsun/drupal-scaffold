@@ -6,16 +6,18 @@
 
 use Drupal\Core\Installer\InstallerKernel;
 
-$platformsh = new \Platformsh\ConfigReader\Config();
-
 // Set up a config sync directory.
 //
 // This is defined inside the read-only "config" directory, deployed via Git.
 $settings['config_sync_directory'] = '../config/sync';
 
-// Configure the database.
-if ($platformsh->hasRelationship('database')) {
-  $creds = $platformsh->credentials('database');
+// Configure the database from the environment context.
+$relationships_json = base64_decode(getenv('PLATFORM_RELATIONSHIPS'));
+$relationships = json_decode($relationships_json, true);
+// Example for a database relationship named 'database'
+if (isset($relationships['database'])) {
+  // Assuming a single database relationship
+  $creds = $relationships['database'][0];
   $databases['default']['default'] = [
     'driver' => $creds['scheme'],
     'database' => $creds['path'],
@@ -33,24 +35,26 @@ if ($platformsh->hasRelationship('database')) {
 // Enable verbose error messages on development branches, but not on the production branch.
 // You may add more debug-centric settings here if desired to have them automatically enable
 // on development but not production.
-if (isset($platformsh->branch)) {
-  // Production type environment.
-  if ($platformsh->onProduction() || $platformsh->onDedicated()) {
-    $config['system.logging']['error_level'] = 'hide';
-  } // Development type environment.
-  else {
-    $config['system.logging']['error_level'] = 'verbose';
-  }
+if (getenv('PLATFORM_ENVIRONMENT_TYPE') == 'production') {
+  // Production environment type.
+  $config['system.logging']['error_level'] = 'hide';
+} else {
+  // Non-production environment types.
+  $config['system.logging']['error_level'] = 'verbose';
 }
 
 // Enable Redis caching.
-if ($platformsh->hasRelationship('redis') && !InstallerKernel::installationAttempted() && extension_loaded('redis') && class_exists('Drupal\redis\ClientFactory')) {
-  $redis = $platformsh->credentials('redis');
+// Uses relationship to a Redis-compatible backend named `cache`.
+if (isset($relationships['cache'])
+  && !InstallerKernel::installationAttempted()
+  && extension_loaded('redis')
+  && class_exists('Drupal\redis\ClientFactory')) {
+  $creds = $relationships['cache'][0];
 
   // Set Redis as the default backend for any cache bin not otherwise specified.
   $settings['cache']['default'] = 'cache.backend.redis';
-  $settings['redis.connection']['host'] = $redis['host'];
-  $settings['redis.connection']['port'] = $redis['port'];
+  $settings['redis.connection']['host'] = $creds['host'];
+  $settings['redis.connection']['port'] = $creds['port'];
 
   // Apply changes to the container configuration to better leverage Redis.
   // This includes using Redis for the lock and flood control systems, as well
@@ -97,13 +101,13 @@ if ($platformsh->hasRelationship('redis') && !InstallerKernel::installationAttem
   ];
 }
 
-if ($platformsh->inRuntime()) {
+if (getenv('PLATFORM_BRANCH')) {
   // Configure private and temporary file paths.
   if (!isset($settings['file_private_path'])) {
-    $settings['file_private_path'] = $platformsh->appDir . '/private';
+    $settings['file_private_path'] = getenv('PLATFORM_APP_DIR') . '/private';
   }
   if (!isset($settings['file_temp_path'])) {
-    $settings['file_temp_path'] = $platformsh->appDir . '/tmp';
+    $settings['file_temp_path'] = getenv('PLATFORM_APP_DIR') . '/tmp';
   }
 
 // Configure the default PhpStorage and Twig template cache directories.
@@ -116,13 +120,13 @@ if ($platformsh->inRuntime()) {
 
   // Set the project-specific entropy value, used for generating one-time
   // keys and such.
-  $settings['hash_salt'] = empty($settings['hash_salt']) ? $platformsh->projectEntropy : $settings['hash_salt'];
+  $settings['hash_salt'] = empty($settings['hash_salt']) ? getenv('PLATFORM_PROJECT_ENTROPY') : $settings['hash_salt'];
 
   // This will prevent Drupal from setting read-only permissions on sites/default.
   $settings['skip_permissions_hardening'] = TRUE;
 
   // Set the deployment identifier, which is used by some Drupal cache systems.
-  $settings['deployment_identifier'] = $settings['deployment_identifier'] ?? $platformsh->treeId;
+  $settings['deployment_identifier'] = $settings['deployment_identifier'] ?? getenv('PLATFORM_TREE_ID');;
 }
 
 // The 'trusted_hosts_pattern' setting allows an admin to restrict the Host header values
@@ -135,7 +139,10 @@ $settings['trusted_host_patterns'] = ['.*'];
 
 // Import variables prefixed with 'drupalsettings:' into $settings
 // and 'drupalconfig:' into $config.
-foreach ($platformsh->variables() as $name => $value) {
+$application_json = base64_decode(getenv('PLATFORM_APPLICATION'));
+$application = json_decode($application_json, true);
+$variables = isset($application['variables']) ? $application['variables'] : [];
+foreach ($variables as $name => $value) {
   $parts = explode(':', $name);
   list($prefix, $key) = array_pad($parts, 3, null);
   switch ($prefix) {

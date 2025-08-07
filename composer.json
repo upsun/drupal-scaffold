@@ -12,7 +12,6 @@
   "require": {
     "drupal/core-composer-scaffold": "*",
     "drupal/core-recommended": "8.x",
-    "platformsh/config-reader": "*",
     "drush/drush": "*",
     "drupal/redis": "*"
   },
@@ -37,10 +36,6 @@
         },
         "[project-root]/drush/platformsh_deploy_drupal.sh": {
           "path": "assets/common/drush/platformsh_deploy_drupal.sh",
-          "overwrite": false
-        },
-        "[project-root]/drush/platformsh_generate_drush_yml.php": {
-          "path": "assets/common/drush/platformsh_generate_drush_yml.php",
           "overwrite": false
         },
         "[web-root]/sites/default/settings.php": {
