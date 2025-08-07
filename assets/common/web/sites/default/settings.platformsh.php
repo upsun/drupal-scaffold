@@ -54,7 +54,7 @@ if (isset($relationships['cache'])
   // Set Redis as the default backend for any cache bin not otherwise specified.
   $settings['cache']['default'] = 'cache.backend.redis';
   $settings['redis.connection']['host'] = $creds['host'];
-  $settings['redis.connection']['port'] = $creds['PORT'];
+  $settings['redis.connection']['port'] = $creds['port'];
 
   // Apply changes to the container configuration to better leverage Redis.
   // This includes using Redis for the lock and flood control systems, as well
