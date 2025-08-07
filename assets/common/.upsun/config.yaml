@@ -50,7 +50,6 @@ applications:
             # fast.
             deploy: |
                 set -e
-                php ./drush/platformsh_generate_drush_yml.php
                 # if drupal is installed, will call the following drush commands:
                 #   - `cache-rebuild`
                 #   - `updatedb`
@@ -94,16 +93,13 @@ applications:
                 # The files directory has its own special configuration rules.
                 '/sites/default/files':
                     # Allow access to all files in the public files directory.
+                    # Drupal file management allows us to set extremely long cache expiry.
                     allow: true
-                    expires: 5m
+                    expires: 6M
                     passthru: '/index.php'
                     root: 'web/sites/default/files'
                     # Do not execute PHP scripts from the writeable mount.
                     scripts: false
-                    rules:
-                        # Provide a longer TTL (2 weeks) for aggregated CSS and JS files.
-                        '^/sites/default/files/(css|js)':
-                            expires: 2w
         crons:
             # Run Drupal's cron tasks every 19 minutes.
             drupal:
