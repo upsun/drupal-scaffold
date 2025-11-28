@@ -39,12 +39,10 @@ Some of these files (`config.yaml`) must exist and have been committed before th
 
 * Adds required Upsun config file `config.yaml`
   * which defines the database services, web behaviour, and deployment actions
-* Adds Platform.sh config reader 
-  * which is used to pull in the environment connection information
 * Adds configurations to settings.php to use the environment settings.
   * Such as the DB connection details
-* Adds drush support with some helper scripts
-  * `drush/*`, `.environmnent`
+* Adds drush support with some helper scripts and environment variables
+  * `.environmnent`
 * Requires `drush/drush` and `drupal/redis` libraries for optimal behaviour.
 
 ### Adjustments
@@ -96,3 +94,12 @@ upsun resources:get
 upsun subscription:info plan 'upsun/flexible'
 upsun resources:set --disk drupal:512,db:614512
 ```
+
+# CHANGELOG
+
+The x.1.x releases introduce some cleanup and removes some code that is infrequently used.
+* The platformsh/config-reader dependency is removed. Database connection details are now retrieved directly from the environment.
+* The generate_drush_yaml script is removed from the build hook. drush URI is now configured by means of an envirnment variable defined in the .environment file
+* Drupal-specific environment variable support is removed from settings. It is very seldom used, and can be applied manually if anyone wants to use it.
+* Static files cache lifetime has been bumped up to 6 minths, as the previous short lifetime was a development-only default, not a recommendation for production.
+
