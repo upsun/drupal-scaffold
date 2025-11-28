@@ -139,10 +139,27 @@ $settings['trusted_host_patterns'] = ['.*'];
 
 // Import variables prefixed with 'drupalsettings:' into $settings
 // and 'drupalconfig:' into $config.
-$application_json = base64_decode(getenv('PLATFORM_APPLICATION'));
-$application = json_decode($application_json, true);
-$variables = isset($application['variables']) ? $application['variables'] : [];
-foreach ($variables as $name => $value) {
+$platform_variables=json_decode(base64_decode(getenv('PLATFORM_VARIABLES')));
+foreach ($platform_variables as $name => $value) {
+
+  // Coerce string values to the most appropriate PHP type.
+  // I need to be able to set a config as false, not "false"
+  $coerced = $value;
+  if (is_string($value)) {
+    $lower = strtolower($value);
+    if ($lower === 'true') {
+      $coerced = true;
+    } elseif ($lower === 'false') {
+      $coerced = false;
+    } elseif ($lower === 'null') {
+      $coerced = null;
+    } elseif (is_numeric($value)) {
+      $coerced = (strpos($value, '.') !== false || stripos($value, 'e') !== false) ? (float) $value : (int) $value;
+    } elseif (($value[0] === '{' || $value[0] === '[') && ($decoded = json_decode($value, true)) !== null) {
+      $coerced = $decoded;
+    }
+  }
+
   $parts = explode(':', $name);
   list($prefix, $key) = array_pad($parts, 3, null);
   switch ($prefix) {
@@ -152,7 +169,7 @@ foreach ($variables as $name => $value) {
     // value 'foo' becomes $settings['example-setting'] = 'foo';
     case 'drupalsettings':
     case 'drupal':
-      $settings[$key] = $value;
+      $settings[$key] = $coerced;
       break;
     // Variables that begin with `drupalconfig` get mapped to the $config
     // array.  Deeply nested variable names, with colon delimiters,
@@ -173,7 +190,7 @@ foreach ($variables as $name => $value) {
           $prev = &$temp;
           $temp = &$temp[$n];
         }
-        $prev[$n] = $value;
+        $prev[$n] = $coerced;
       }
       break;
   }
