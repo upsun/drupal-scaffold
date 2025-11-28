@@ -12,3 +12,18 @@ fi
 # Set the URI for Drush commands.
 export PRIMARY_URL="$(echo "$PLATFORM_ROUTES" | base64 --decode | jq -r 'to_entries[] | select(.value.primary) | .key | rtrimstr("/")')"
 export DRUSH_OPTIONS_URI="$PRIMARY_URL"
+
+# Unpack all the relationship data into easy-to-access env vars like
+# DATABASE_HOST, DATABASE_PORT, etc.
+# These will be named according to the service name in the
+# platform `relationships:` yaml names.
+eval "$(
+  echo "$PLATFORM_RELATIONSHIPS" | base64 -d | jq -r '
+    to_entries[] |
+    .key as $service |
+    .value[0] |
+    to_entries[] |
+    select(.value != null and ((.value | type) == "string" or (.value | type) == "number" or (.value | type) == "boolean")) |
+    "export " + ($service | ascii_upcase) + "_" + (.key | ascii_upcase) + "=\"" + (.value | tostring) + "\""  '
+)"
+

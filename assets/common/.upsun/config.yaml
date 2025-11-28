@@ -1,7 +1,7 @@
 applications:
     drupal:
         # The runtime the application uses.
-        type: 'php:8.2'
+        type: 'php:8.3'
         dependencies:
             php:
                 composer/composer: '^2.1'
@@ -71,7 +71,7 @@ applications:
                     # suffixed with "s" (seconds), "m" (minutes), "h" (hours), "d"
                     # (days), "w" (weeks), "M" (months, as 30 days) or "y" (years, as
                     # 365 days).
-                    expires: 5m
+                    expires: 6M
                     # Redirect any incoming request to Drupal's front controller.
                     passthru: '/index.php'
                     # Deny access to all static files, except those specifically allowed below.
