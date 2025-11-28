@@ -36,7 +36,7 @@
         },
         "[project-root]/drush/platformsh_deploy_drupal.sh": {
           "path": "assets/common/drush/platformsh_deploy_drupal.sh",
-          "overwrite": false
+          "overwrite": true
         },
         "[web-root]/sites/default/settings.php": {
           "append": "assets/common/web/sites/default/settings.php.append",
